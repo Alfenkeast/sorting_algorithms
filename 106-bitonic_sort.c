@@ -1,72 +1,83 @@
 #include "sort.h"
-/**
-*swap - the positions of two elements into an array
-*@array: array
-*@item1: array element
-*@item2: array element
-*/
-void swap(int *array, ssize_t item1, ssize_t item2)
-{
-	int tmp;
+#include <stdio.h>
 
-	tmp = array[item1];
-	array[item1] = array[item2];
-	array[item2] = tmp;
-}
 /**
- *hoare_partition - hoare partition sorting scheme implementation
- *@array: array
- *@first: first array element
- *@last: last array element
- *@size: size array
- *Return: return the position of the last element sorted
+ * bitonic_compare - sort the values in a sub-array with respect to
+ * the Bitonic sort algorithm
+ * @up: direction of sorting
+ * @array: sub-array to sort
+ * @size: size of the sub-array
+ *
+ * Return: void
  */
-int hoare_partition(int *array, int first, int last, int size)
+void bitonic_compare(char up, int *array, size_t size)
 {
-	int current = first - 1, finder = last + 1;
-	int pivot = array[last];
+	size_t i, dist;
+	int swap;
 
-	while (1)
+	dist = size / 2;
+	for (i = 0; i < dist; i++)
 	{
-
-		do {
-			current++;
-		} while (array[current] < pivot);
-		do {
-			finder--;
-		} while (array[finder] > pivot);
-		if (current >= finder)
-			return (current);
-		swap(array, current, finder);
-		print_array(array, size);
+		if ((array[i] > array[i + dist]) == up)
+		{
+			swap = array[i];
+			array[i] = array[i + dist];
+			array[i + dist] = swap;
+		}
 	}
 }
-/**
- *qs - qucksort algorithm implementation
- *@array: array
- *@first: first array element
- *@last: last array element
- *@size: array size
- */
-void qs(int *array, ssize_t first, ssize_t last, int size)
-{
-	ssize_t position = 0;
 
-	if (first < last)
-	{
-		position = hoare_partition(array, first, last, size);
-		qs(array, first, position - 1, size);
-		qs(array, position, last, size);
-	}
-}
 /**
- *quick_sort_hoare - prepare the terrain to quicksort algorithm
- *@array: array
- *@size: array size
+ * bitonic_merge - recursive function that merges two sub-arrays
+ * @up: direction of sorting
+ * @array: sub-array to sort
+ * @size: size of the sub-array
+ *
+ * Return: void
  */
-void quick_sort_hoare(int *array, size_t size)
+void bitonic_merge(char up, int *array, size_t size)
 {
-	if (!array || size < 2)
+	if (size < 2)
 		return;
-	qs(array, 0, size - 1, size);
+	bitonic_compare(up, array, size);
+	bitonic_merge(up, array, size / 2);
+	bitonic_merge(up, array + (size / 2), size / 2);
+}
+
+/**
+ * bit_sort - recursive function using the Bitonic sort algorithm
+ * @up: direction of sorting
+ * @array: sub-array to sort
+ * @size: size of the sub-array
+ * @t: total size of the original array
+ *
+ * Return: void
+ */
+void bit_sort(char up, int *array, size_t size, size_t t)
+{
+	if (size < 2)
+		return;
+	printf("Merging [%lu/%lu] (%s):\n", size, t, (up == 1) ? "UP" : "DOWN");
+	print_array(array, size);
+	bit_sort(1, array, size / 2, t);
+	bit_sort(0, array + (size / 2), size / 2, t);
+	bitonic_merge(up, array, size);
+	printf("Result [%lu/%lu] (%s):\n", size, t, (up == 1) ? "UP" : "DOWN");
+	print_array(array, size);
+
+}
+
+/**
+ * bitonic_sort - sorts an array of integers in ascending order using
+ * the Bitonic sort algorithm
+ * @array: array to sort
+ * @size: size of the array
+ *
+ * Return: void
+ */
+void bitonic_sort(int *array, size_t size)
+{
+	if (array == NULL || size < 2)
+		return;
+	bit_sort(1, array, size, size);
 }
